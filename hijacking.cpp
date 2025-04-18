@@ -78,7 +78,12 @@ bool run_injected(DWORD pid, ULONGLONG shellcodePtr, DWORD wait_reason)
 
         if (info.ext.state == Waiting) {
             std::cout << "TID: " << info.tid << std::hex << " : wait reason: " << std::dec << info.ext.wait_reason << "\n";
-            if (info.ext.wait_reason != wait_reason || !threads_util::read_context(info.tid, ctx)) {
+            if (wait_reason != WAIT_REASON_UNDEFINED // if wait reason defined
+                && info.ext.wait_reason != wait_reason)
+            {
+                continue;
+            }
+            if (!threads_util::read_context(info.tid, ctx)) {
                 continue;
             }
             ULONGLONG ret = threads_util::read_return_ptr<ULONGLONG>(hProcess, ctx.Rsp);

