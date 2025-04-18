@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        configuration: [ Debug, Release ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Add CMake to PATH
+        uses: lukka/get-cmake@v3.28.3
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/_deps
+            ~/.cache
+          key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt', '**/*.cmake') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-
+
+      - name: Configure build directory
+        run: mkdir build
+
+      - name: CMake configure
+        working-directory: build
+        run: cmake .. -A x64 -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/${{ github.sha }}"
+
+      - name: Build and install
+        working-directory: build
+        run: cmake --build . --config ${{ matrix.configuration }} --target install --parallel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-files-${{ matrix.configuration }}
+          path: ${{ github.workspace }}/${{ github.sha }}
+          if-no-files-found: error
